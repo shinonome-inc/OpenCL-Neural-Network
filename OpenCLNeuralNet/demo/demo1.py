@@ -1,12 +1,12 @@
-from Tkinter import *
+from tkinter import *
 import neuralnet
 import pickle
 import convert
 import Image, ImageDraw
 import time
 
-import thread # should use the threading module instead!
-import Queue
+import _thread # should use the threading module instead!
+import queue
 
 points = []
 tabspace = "    " #four spaces; i.e. a tab
@@ -18,7 +18,7 @@ black = 0
 CTRLA = "'\\x01'"
 netName = "NN-SMALL.net"
 
-lock = thread.allocate_lock()
+lock = _thread.allocate_lock()
 
 image = Image.new("L", (imageWidth,imageHeight), white)
 draw = ImageDraw.Draw(image)
@@ -34,7 +34,7 @@ class Demo(Frame):
     def __init__(self, root, **options):
         #Initialize UI
         Frame.__init__(self,root,**options)
-        print "wa"
+        print("wa")
         optionFrame = Frame(height = 300, width = 200)
         optionFrame.pack(side=LEFT, anchor = N)
 
@@ -64,7 +64,7 @@ class Demo(Frame):
         self.c.bind("<ButtonRelease-1>", self.mouseUp)
         self.c.bind("kkk")
 
-        self.queue = Queue.Queue()
+        self.queue = queue.Queue()
         self.update_me()
 
     def update_me(self):
@@ -74,7 +74,7 @@ class Demo(Frame):
                 self.clearText(self.resultText)
                 self.resultText.insert(END, outputString)
                 self.update_idletasks()
-        except Queue.Empty:
+        except queue.Empty:
             pass
         self.after(100, self.update_me)
 
@@ -86,15 +86,15 @@ class Demo(Frame):
 
     def mouseUp(self,event):
         points[:] = []
-        thread.start_new(Demo.testDigit,(self,))
+        _thread.start_new(Demo.testDigit,(self,))
 
     def clearText(self,textObject):
         textObject.delete(1.0, END)
 
     def testDigit(self):
-        print "Testing!"
+        print("Testing!")
         try:
-            featureVec = map(norm,convert.getFeatureVecFromImg(image))
+            featureVec = list(map(norm,convert.getFeatureVecFromImg(image)))
         except:
             return
 
@@ -103,14 +103,14 @@ class Demo(Frame):
             net.SetInputs(featureVec)
             rawOutputs = net.ComputeOutput()
 
-        outputs = map (Indicator,rawOutputs)
-        roundedOutputs = map (lambda x: "%.3f" % round (x,3),rawOutputs)
+        outputs = list(map (Indicator,rawOutputs))
+        roundedOutputs = ["%.3f" % round (x,3) for x in rawOutputs]
         outputString =  "Confidence Values:\n" + \
                 tabspace+str(roundedOutputs).ljust(10) + "\n" + \
                 "Greatest Confidence:\n"  + \
                 tabspace + str(rawOutputs.index(max(rawOutputs))) + " with %3.3f" % (100*max(rawOutputs)) + "% confidence"
         self.queue.put(outputString)
-        print "done testing"
+        print("done testing")
 
 
     def clearCanvas(self):
@@ -123,11 +123,11 @@ class Demo(Frame):
 
 #Load neural network
 t = time.time()
-print "Loading neural network..."
+print("Loading neural network...")
 net = neuralnet.NeuralNet()
 net.LoadData(netName)
-print "Done!",
-print "Loaded in ", time.time()-t, "seconds.."
+print("Done!", end=' ')
+print("Loaded in ", time.time()-t, "seconds..")
 
 root = Tk()
 root.title("Digit Recognition")
