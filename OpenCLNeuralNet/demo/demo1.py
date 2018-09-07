@@ -2,7 +2,7 @@ from tkinter import *
 import neuralnet
 import pickle
 import convert
-import Image, ImageDraw
+from PIL import Image, ImageDraw
 import time
 
 import _thread # should use the threading module instead!
